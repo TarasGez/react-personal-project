@@ -101,8 +101,8 @@ export default class Scheduler extends Component {
         this._setTasksFetchingState(true);
 
         this.setState(({ tasks }) => ({
-            tasks:          tasks.filter((task) => task.id !== id),
-            isTaskFetching: false,
+            tasks:           tasks.filter((task) => task.id !== id),
+            isTasksFetching: false,
         }));
     }
 
