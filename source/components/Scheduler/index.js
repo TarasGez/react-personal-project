@@ -196,7 +196,6 @@ export default class Scheduler extends Component {
                             </ul>
                         </div>
                     </section>
-
                 </main>
             </section>
         );
