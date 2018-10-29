@@ -5,6 +5,8 @@ import PropTypes from 'prop-types';
 
 // Instruments
 import Styles from './styles.m.css';
+//import withSvg from '../../instruments/withSvg';
+//import Star from 'theme/assets/Star';
 
 export default class Task extends PureComponent {
     static propTypes = {
@@ -175,8 +177,10 @@ export default class Task extends PureComponent {
                         className = { Styles.toggleTaskFavoriteState }
                         style = { star }
                         onClick = { this._toggleTaskFavoriteState }>
+
                         <span style = { pointer }>{starStyles}</span>
                     </div>
+
                     <div
                         className = { Styles.updateTaskMessageOnClick }
                         style = { edit }
