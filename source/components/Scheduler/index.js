@@ -32,17 +32,43 @@ export default class Scheduler extends Component {
     _fetchTasksAsync = async () => {
         this._setTasksFetchingState(true);
 
-        const response = await fetch(api, {
-            method: 'GET',
-        });
-
-        const { data: tasks } = await response.json();
+        const tasks = await api.fetchTasks();
 
         this.setState({
             tasks,
-            isTasksFetching: false,
         });
 
+        this._setTasksFetchingState(false);
+    };
+
+    _createTaskAsync = async (event) => {
+        const { newTaskMessage } = this.state;
+
+        if (!newTaskMessage.length) {
+            return null;
+        }
+
+        event.preventDefault();
+
+        this._setTasksFetchingState(true);
+
+        const task = await api.createTask(newTaskMessage);
+
+        this.setState(({ tasks }) => ({
+            tasks:          [task, ...tasks],
+            newTaskMessage: '',
+        }));
+
+        this._setTasksFetchingState(false);
+    };
+
+    _removeTaskAsync = (id) => {
+        this._setTasksFetchingState(true);
+
+        this.setState(({ tasks }) => ({
+            tasks:           tasks.filter((task) => task.id !== id),
+            isTasksFetching: false,
+        }));
     };
 
     _updateTasksFilter = (event) => {
@@ -100,54 +126,6 @@ export default class Scheduler extends Component {
         });
     };
 
-    _createTaskAsync = async (event) => {
-        const { newTaskMessage } = this.state;
-
-        if (!newTaskMessage.length) {
-            return null;
-        }
-
-        event.preventDefault();
-
-        this._setTasksFetchingState(true);
-
-        const response = await fetch(api, {
-            method:  'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization:  api,
-            },
-            body: JSON.stringify({ newTaskMessage }),
-        });
-
-        const { data: task } = await response.json();
-
-        this.setState(({ tasks }) => ({
-            tasks:           [task, ...tasks],
-            newTaskMessage:  '',
-            isTasksFetching: false,
-        }));
-    };
-
-    _removeTaskAsync = (id) => {
-        this._setTasksFetchingState(true);
-
-        this.setState(({ tasks }) => ({
-            tasks:           tasks.filter((task) => task.id !== id),
-            isTasksFetching: false,
-        }));
-    };
-
-    _submitOnEnter = (event) => {
-        const enterKey = event.key === 'Enter';
-
-        if (enterKey) {
-            event.preventDefault();
-            this._submitTask();
-            console.log('onEnter SHE');
-        }
-    };
-
     _completeAllTasksAsync = () => {
         console.log("All tasks completed");
     };
@@ -165,6 +143,7 @@ export default class Scheduler extends Component {
                 <Task
                     key = { task.id }
                     { ...task }
+                    modified
                     _removeTaskAsync = { this._removeTaskAsync }
                     _updateTaskAsync = { this._updateTaskAsync }
                 />
@@ -190,7 +169,7 @@ export default class Scheduler extends Component {
                     <section>
                         <form onSubmit = { this._createTaskAsync }>
                             <input
-                                className = 'createTask'
+                                className = { Styles.createTask }
                                 maxLength = { 50 }
                                 placeholder = 'Описaние моей новой задачи'
                                 type = 'text'
