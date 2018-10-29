@@ -1,31 +1,35 @@
 // Core
-import React, { PureComponent } from 'react';
-//import moment from 'moment';
-import PropTypes from 'prop-types';
+import React, { PureComponent, createRef } from 'react';
+import cx from 'classnames';
+import { string, bool, func } from 'prop-types';
 
 // Instruments
 import Styles from './styles.m.css';
-//import withSvg from '../../instruments/withSvg';
-//import Star from 'theme/assets/Star';
+
+// Components
+import Checkbox from '../../theme/assets/Checkbox';
+import Star from '../../theme/assets/Star';
+import Edit from '../../theme/assets/Edit';
+import Remove from '../../theme/assets/Remove';
 
 export default class Task extends PureComponent {
     static propTypes = {
-        _removeTask: PropTypes.func.isRequired,
-        //_updateTask: PropTypes.func.isRequired,
-        // _toggleTaskFavoriteState: PropTypes.func.isRequired,
-        completed:   PropTypes.bool.isRequired,
-        created:     PropTypes.number.isRequired,
-        favorite:    PropTypes.bool.isRequired,
-        id:          PropTypes.string.isRequired,
-        message:     PropTypes.string.isRequired,
-    }
+        _removeTaskAsync: func.isRequired,
+        _updateTaskAsync: func.isRequired,
+        completed:        bool.isRequired,
+        created:          string.isRequired,
+        favorite:         bool.isRequired,
+        id:               string.isRequired,
+        message:          string.isRequired,
+        modified:         string.isRequired,
+    };
 
     state = {
-        favorite:   this.props.favorite,
-        myRef:      this.props.id,
-        isDisabled: true,
-        message:    this.props.message,
-    }
+        isTaskEditing: false,
+        newMessage:    this.props.message,
+    };
+
+    taskInput = createRef();
 
     _getTaskShape = ({
         id = this.props.id,
@@ -39,157 +43,160 @@ export default class Task extends PureComponent {
         message,
     });
 
-    _setTaskFavoriteState (state) {
+    _setTaskEditingState = (isTaskEditing) => {
+        this.setState(
+            {
+                isTaskEditing,
+            },
+            () => {
+                if (isTaskEditing) {
+                    this.taskInput.current.focus();
+                }
+            },
+        );
+    };
+
+    _updateNewTaskMessage = (event) => {
         this.setState({
-            favorite: state,
+            newMessage: event.target.value,
         });
-        console.log("favorite: ", state);
+    };
+
+    _updateTask = () => {
+        const { _updateTaskAsync, message } = this.props;
+        const { newMessage } = this.state;
+
+        if (message === newMessage) {
+            this._setTaskEditingState(false);
+
+            return null;
+        }
+
+        _updateTaskAsync(this._getTaskShape({ message: newMessage }));
+        this._setTaskEditingState(false);
+    };
+
+    _updateTaskMessageOnClick = () => {
+        const { isTaskEditing } = this.state;
+
+        if (isTaskEditing) {
+            this._updateTask();
+
+            return null;
+        }
+
+        this._setTaskEditingState(true);
+    };
+
+    _cancelUpdatingTaskMessage = () => {
+        const { message } = this.props;
+
+        this.setState({
+            newMessage:    message,
+            isTaskEditing: false,
+        });
+    };
+
+    _updateTaskMessageOnKeyDown = (event) => {
+        const { newMessage } = this.state;
+
+        if (!newMessage.length) {
+            return null;
+        }
+
+        switch (event.key) {
+            case 'Enter': {
+                this._updateTask();
+                break;
+            }
+
+            case 'Escape': {
+                this._cancelUpdatingTaskMessage();
+                break;
+            }
+
+            default:
+                break;
+        }
+    };
+
+    _toggleTaskComplitedState = () => {
+        const { _updateTaskAsync, completed } = this.props;
+
+        const taskToUpdate = this._getTaskShape({ complited: !completed });
+
+        _updateTaskAsync(taskToUpdate);
     }
 
     _toggleTaskFavoriteState = () => {
+        const { _updateTaskAsync, favorite } = this.props;
 
-        if (this.state.favorite) {
-            this._setTaskFavoriteState(false);
-        } else {
-            this._setTaskFavoriteState(true);
-        }
-    }
+        const taskToUpdate = this._getTaskShape({ favotite: !favorite });
 
-    _setDisabled (state) {
-        this.setState({
-            isDisabled: state,
-        });
-    }
+        _updateTaskAsync(taskToUpdate);
+    };
 
     _removeTask = () => {
-        const { _removeTask, id } = this.props;
+        const { id, _removeTaskAsync } = this.props;
 
-        _removeTask(id);
-    }
-
-    _updateTaskMessageOnClick = () => {
-        const ref = this.state.myRef;
-
-        this._setDisabled(false);
-
-        console.log(ref);
-        // SEND DATA
-    }
-
-    _updateTaskMessage = (event) => {
-        this.setState({
-            message: event.target.value,
-        });
-    }
-
-    _updateOnEnter = (event) => {
-        if (event.key === 'Esc') {
-            event.preventDefault();
-            this._setDisabled(true);
-        } else
-        if (event.key === 'Enter') {
-            event.preventDefault();
-            this._setDisabled(true);
-        }
-    }
-
-    _clearUpdates = (event) => {
-        if (event.keyCode === 27) {
-            event.preventDefault();
-            this._setDisabled(true);
-            this.setState({
-                message: this.props.message,
-            });
-            console.log("Esc this.state.message: ", this.state.message);
-            console.log("Esc this.props.message: ", this.props.message);
-        }
-    }
-
-    _getStarStyles = () => {
-        const favorite = this.state.favorite;
-
-        if (favorite) {
-            return `*`;
-        }
-
-        return `-`;
-    }
+        _removeTaskAsync(id);
+    };
 
     render () {
-        const {
-            textInput,
-            isDisabled,
-            message,
-        } = this.state;
+        const { isTaskEditing, newMessage } = this.state;
+        const { message, completed, favorite } = this.props;
 
-        const checkbox = {
-            "display": "inline-block",
-            "height":  25,
-            "width":   25,
-        };
+        const styles = cx(Styles.task, {
+            [Styles.completed]: completed,
+        });
 
-        const star = {
-            "display": "inline-block",
-            "height":  19,
-            "width":   19,
-        };
-
-        const edit = {
-            "display": "inline-block",
-            "height":  19,
-            "width":   19,
-        };
-
-        const remove = {
-            "display": "inline-block",
-            "height":  17,
-            "width":   17,
-        };
-
-        const pointer = {
-            "cursor": "pointer",
-        };
-
-        const starStyles = this._getStarStyles();
+        const currentMessage = isTaskEditing ? newMessage : message;
 
         return (
-            <li className = { Styles.task }>
+            <li className = { styles }>
                 <div className = { Styles.content }>
-                    <div
+                    <Checkbox
+                        inlineBlock
+                        checked = { completed }
                         className = { Styles.toggleTaskCompletedState }
-                        style = { checkbox }>
-                    [ ]
-                    </div>
+                        color1 = '#3B8EF3'
+                        color2 = '#FFF'
+                        onClick = { this._toggleTaskCompletedState }
+                    />
                     <input
-                        disabled = { isDisabled }
+                        disabled = { !isTaskEditing }
                         maxLength = { 50 }
-                        ref = { textInput }
+                        ref = { this.taskInput }
                         type = 'text'
-                        value = { message }
-                        onChange = { this._updateTaskMessage }
-                        onKeyDown = { this._clearUpdates }
-                        onKeyPress = { this._updateOnEnter }
+                        value = { currentMessage }
+                        onChange = { this._updateNewTaskMessage }
+                        onKeyDown = { this._updateTaskMessageOnKeyDown }
                     />
                 </div>
-
                 <div className = { Styles.actions }>
-                    <div
+                    <Star
+                        inlineBlock
+                        checked = { favorite }
                         className = { Styles.toggleTaskFavoriteState }
-                        style = { star }
-                        onClick = { this._toggleTaskFavoriteState }>
-
-                        <span style = { pointer }>{starStyles}</span>
-                    </div>
-
-                    <div
+                        color1 = '#3B8EF3'
+                        color2 = '#000'
+                        onClick = { this._toggleTaskFavoriteState }
+                    />
+                    <Edit
+                        inlineBlock
+                        checked = { isTaskEditing }
                         className = { Styles.updateTaskMessageOnClick }
-                        style = { edit }
-                        onClick = { this._updateTaskMessageOnClick }>
-                        <span style = { pointer }>[~]</span>
-                    </div>
-                    <div style = { remove } onClick = { this._removeTask } >
-                        <span style = { pointer }>x</span>
-                    </div>
+                        color1 = '#3B8EF3'
+                        color2 = '#000'
+                        onClick = { this._updateTaskMessageOnClick }
+                    />
+                    <Remove
+                        inlineBlock
+                        className = { Styles.removeTask }
+                        color1 = '#3B8EF3'
+                        color2 = '#000'
+                        onClick = { this._removeTask }
+                    />
                 </div>
             </li>
         );
