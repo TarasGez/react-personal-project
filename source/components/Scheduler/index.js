@@ -62,13 +62,35 @@ export default class Scheduler extends Component {
         this._setTasksFetchingState(false);
     };
 
-    _removeTaskAsync = (id) => {
+    _updateTaskAsync = async (params) => {
         this._setTasksFetchingState(true);
 
+        const updatedTask = await api.updateTask(params);
+
+        console.log("updatedTask from She:", updatedTask);
+
         this.setState(({ tasks }) => ({
-            tasks:           tasks.filter((task) => task.id !== id),
-            isTasksFetching: false,
+            tasks: tasks.map(
+                (task) => task.id === updatedTask.id ? updatedTask : task,
+            ),
         }));
+
+        this.forceUpdate();
+
+        this._setTasksFetchingState(false);
+
+    };
+
+    _removeTaskAsync = async (id) => {
+        this._setTasksFetchingState(true);
+
+        await api.removeTask(id);
+
+        this.setState(({ tasks }) => ({
+            tasks: tasks.filter((task) => task.id !== id),
+        }));
+
+        this._setTasksFetchingState(false);
     };
 
     _updateTasksFilter = (event) => {
@@ -83,19 +105,27 @@ export default class Scheduler extends Component {
         });
     };
 
-    _getAllCompleted = () => {
-        const completedTasksArray = this.state.task.map((task) => {
-            if (!task.completed) {
-                return false;
-            }
+    _completeAllTasksAsync = async () => {
 
-            return true;
+        // var nameLengths = names.map(function(name) {
+        //     return name.length;
+        //   });
 
-        });
+        // const newTasks = this.state.task.map((task) {
+        //     if (task.completed) {
+        //         console.log("All tasks completed!");
 
-        this.setState({
-            tasks: completedTasksArray,
-        });
+        //         return null;
+        //     } else {
+
+        //     }
+
+        // });
+
+        this._setTasksFetchingState(true);
+
+        await api.removeTask(1);
+
     };
 
     _toggleTaskFavoriteState = (id) => {
@@ -116,18 +146,20 @@ export default class Scheduler extends Component {
         });
     };
 
-    _updateTaskAsync = () => {
-        this._setTasksFetchingState(true);
+    //////////////////
+    _getAllCompleted = () => {
+        const completedTasksArray = this.state.task.map((task) => {
+            if (!task.completed) {
+                return false;
+            }
 
-        console.log("update");
+            return true;
+
+        });
 
         this.setState({
-            isTasksFetching: false,
+            tasks: completedTasksArray,
         });
-    };
-
-    _completeAllTasksAsync = () => {
-        console.log("All tasks completed");
     };
 
     render () {
@@ -138,14 +170,16 @@ export default class Scheduler extends Component {
             tasks,
         } = this.state;
 
+        const modified = '';
+
         const tasksJSX = tasks.map((task) => {
             return (
                 <Task
                     key = { task.id }
                     { ...task }
-                    modified
                     _removeTaskAsync = { this._removeTaskAsync }
                     _updateTaskAsync = { this._updateTaskAsync }
+                    modified = { modified }
                 />
             );
         });

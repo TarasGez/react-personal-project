@@ -12,14 +12,10 @@ export const api = {
 
         const { data: tasks } = await response.json();
 
-        console.log('fetchTasks:', tasks);
-
         return tasks;
     },
 
     async createTask (message) {
-        console.log('Message:', message);
-
         const response = await fetch(MAIN_URL, {
             method:  'POST',
             headers: {
@@ -31,32 +27,35 @@ export const api = {
 
         const { data: task } = await response.json();
 
-        console.log('createTask:', task);
-
         return task;
     },
 
-    async updateTask (newTaskMessage) {
-        console.log('newTaskMessage:', newTaskMessage);
+    async updateTask (params) {
+        console.log("params in API:", params);
 
         const response = await fetch(MAIN_URL, {
-            method:  'POST',
+            method:  'PUT',
             headers: {
                 'Content-Type': 'application/json',
                 Authorization:  TOKEN,
             },
-            body: JSON.stringify({ newTaskMessage }),
+            body: JSON.stringify([{ ...params }]),
         });
 
         const { data: task } = await response.json();
 
-        console.log('createTask:', task);
+        console.log("updateTask in API:", task);
 
         return task;
     },
 
-    removeTask () {
-        return null;
+    async removeTask (id) {
+        await fetch(`${MAIN_URL}/${id}`, {
+            method:  'DELETE',
+            headers: {
+                Authorization: TOKEN,
+            },
+        });
     },
 
     completeAllTasks () {
