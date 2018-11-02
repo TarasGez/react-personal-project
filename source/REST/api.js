@@ -31,7 +31,7 @@ export const api = {
     },
 
     async updateTask (params) {
-        console.log("params in API:", params);
+        console.log("UdateTASK params in API:", params);
 
         const response = await fetch(MAIN_URL, {
             method:  'PUT',
@@ -58,7 +58,15 @@ export const api = {
         });
     },
 
-    completeAllTasks () {
-        return null;
+    async completeAllTasks (notCompletedTasks) {
+        await notCompletedTasks.forEach((item) => {
+            console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!notCompletedTasks", item);
+            api.updateTask({
+                ...item,
+                completed: true,
+            });
+        }
+
+        );
     },
 };

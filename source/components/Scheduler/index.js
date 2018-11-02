@@ -8,7 +8,7 @@ import Checkbox from '../../theme/assets/Checkbox';
 
 // Instruments
 import Styles from './styles.m.css';
-//import { getDisplayName, sortTasksByDate } from '../../instruments/helpers';
+import { sortTasksByGroup } from '../../instruments/helpers';
 import { api } from '../../REST'; // ! Импорт модуля API должен иметь именно такой вид (import { api } from '../../REST')
 
 export default class Scheduler extends Component {
@@ -32,7 +32,7 @@ export default class Scheduler extends Component {
     _fetchTasksAsync = async () => {
         this._setTasksFetchingState(true);
 
-        const tasks = await api.fetchTasks();
+        const tasks = sortTasksByGroup(await api.fetchTasks());
 
         this.setState({
             tasks,
@@ -67,7 +67,7 @@ export default class Scheduler extends Component {
 
         const updatedTask = await api.updateTask(params);
 
-        console.log("updatedTask from She:", updatedTask);
+        console.log("updatedTask from Sheduler:", updatedTask);
 
         this.setState(({ tasks }) => ({
             tasks: tasks.map(
@@ -75,10 +75,9 @@ export default class Scheduler extends Component {
             ),
         }));
 
-        this.forceUpdate();
-
         this._setTasksFetchingState(false);
 
+        this._fetchTasksAsync();
     };
 
     _removeTaskAsync = async (id) => {
@@ -91,6 +90,7 @@ export default class Scheduler extends Component {
         }));
 
         this._setTasksFetchingState(false);
+
     };
 
     _updateTasksFilter = (event) => {
@@ -107,59 +107,39 @@ export default class Scheduler extends Component {
 
     _completeAllTasksAsync = async () => {
 
-        // var nameLengths = names.map(function(name) {
-        //     return name.length;
-        //   });
+        const isAllTasksCompleted = this.state.tasks.every((task) => task.completed);
 
-        // const newTasks = this.state.task.map((task) {
-        //     if (task.completed) {
-        //         console.log("All tasks completed!");
+        if (isAllTasksCompleted) {
+            console.log("All Tasks Completed:", isAllTasksCompleted);
 
-        //         return null;
-        //     } else {
-
-        //     }
-
-        // });
+            return null;
+        }
 
         this._setTasksFetchingState(true);
 
-        await api.removeTask(1);
+        const notCompletedTasks = this.state.tasks.filter((task) => !task.completed);
 
+        console.log("Not Completed Tasks:", notCompletedTasks);
+
+        await api.completeAllTasks(notCompletedTasks);
+
+        this.setState(({ tasks }) => ({
+            tasks: tasks.map(
+                (task) => {
+                    return {
+                        ...task,
+                        completed: true,
+                    };
+                }),
+        }));
+
+        console.log("TASKS:", this.state.tasks);
+
+        this._setTasksFetchingState(false);
     };
 
-    _toggleTaskFavoriteState = (id) => {
-        this._setTasksFetchingState(true);
-
-        const newTasks = this.state.task.map((task) => {
-            if (task.id === id) {
-                task.favorite = !task.favorite;
-                console.log("favorite: ", task.favorite);
-            }
-
-            return task;
-        });
-
-        this.setState({
-            tasks:           newTasks,
-            isTasksFetching: false,
-        });
-    };
-
-    //////////////////
     _getAllCompleted = () => {
-        const completedTasksArray = this.state.task.map((task) => {
-            if (!task.completed) {
-                return false;
-            }
-
-            return true;
-
-        });
-
-        this.setState({
-            tasks: completedTasksArray,
-        });
+        return this.state.tasks.every((task) => task.completed);
     };
 
     render () {
@@ -171,6 +151,7 @@ export default class Scheduler extends Component {
         } = this.state;
 
         const modified = '';
+        const getAllCompleted = this._getAllCompleted();
 
         const tasksJSX = tasks.map((task) => {
             return (
@@ -195,7 +176,7 @@ export default class Scheduler extends Component {
                         <input
                             placeholder = 'Поиск'
                             type = 'search'
-                            value = { tasksFilter }
+                            value = { tasksFilter.toLowerCase() }
                             onChange = { this._updateTasksFilter }
                         />
                     </header>
@@ -223,7 +204,7 @@ export default class Scheduler extends Component {
                     </section>
                     <footer>
                         <Checkbox
-                            checked = { false }
+                            checked = { getAllCompleted }
                             color1 = '#363636'
                             color2 = '#fff'
                             hover = { false }

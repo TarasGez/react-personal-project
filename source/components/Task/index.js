@@ -45,10 +45,7 @@ export default class Task extends PureComponent {
 
     _setTaskEditingState = (isTaskEditing) => {
         this.setState(
-            {
-                isTaskEditing,
-            },
-            () => {
+            { isTaskEditing }, () => {
                 if (isTaskEditing) {
                     this.taskInput.current.focus();
                 }
@@ -120,20 +117,17 @@ export default class Task extends PureComponent {
         }
     };
 
-    _toggleTaskComplitedState = () => {
+    _toggleTaskCompletedState = () => {
         const { _updateTaskAsync, completed } = this.props;
 
-        const taskToUpdate = this._getTaskShape({ complited: !completed });
-
-        _updateTaskAsync(taskToUpdate);
+        _updateTaskAsync(this._getTaskShape({ completed: !completed }));
     }
 
     _toggleTaskFavoriteState = () => {
         const { _updateTaskAsync, favorite } = this.props;
 
-        const taskToUpdate = this._getTaskShape({ favotite: !favorite });
+        _updateTaskAsync(this._getTaskShape({ favorite: !favorite }));
 
-        _updateTaskAsync(taskToUpdate);
     };
 
     _removeTask = () => {
