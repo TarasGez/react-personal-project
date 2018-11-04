@@ -31,7 +31,7 @@ export const api = {
     },
 
     async updateTask (params) {
-        console.log("UdateTASK params in API:", params);
+        // console.log("UdateTASK params in API:", params);
 
         const response = await fetch(MAIN_URL, {
             method:  'PUT',
@@ -44,7 +44,7 @@ export const api = {
 
         const { data: task } = await response.json();
 
-        console.log("updateTask in API:", task);
+        // console.log("updateTask in API:", task);
 
         return task;
     },
@@ -59,14 +59,17 @@ export const api = {
     },
 
     async completeAllTasks (notCompletedTasks) {
-        await notCompletedTasks.forEach((item) => {
-            console.log("!!!!!!!!!!!!!!!!!!!!!!!!!!!!!notCompletedTasks", item);
-            api.updateTask({
-                ...item,
-                completed: true,
-            });
-        }
-
+        await Promise.all(
+            [notCompletedTasks.forEach((item) => {
+                // console.log("notCompletedTask send:", item);
+                api.updateTask({
+                    ...item,
+                    completed: true,
+                });
+            }
+            )]
+        // ).then(
+        //     console.log("All send")
         );
     },
 };

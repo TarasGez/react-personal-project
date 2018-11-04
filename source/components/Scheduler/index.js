@@ -1,5 +1,6 @@
 // Core
 import React, { Component } from 'react';
+import { CSSTransition, TransitionGroup } from 'react-transition-group';
 
 // Components
 import Spinner from 'components/Spinner';
@@ -32,10 +33,13 @@ export default class Scheduler extends Component {
     _fetchTasksAsync = async () => {
         this._setTasksFetchingState(true);
 
-        const tasks = sortTasksByGroup(await api.fetchTasks());
+        const tasks = await api.fetchTasks();
 
         this.setState({
-            tasks,
+            tasks: sortTasksByGroup(
+                tasks.filter((task) => task.message.includes(
+                    this.state.tasksFilter)
+                )),
         });
 
         this._setTasksFetchingState(false);
@@ -52,14 +56,19 @@ export default class Scheduler extends Component {
 
         this._setTasksFetchingState(true);
 
-        const task = await api.createTask(newTaskMessage);
+        const newTask = await api.createTask(newTaskMessage);
 
         this.setState(({ tasks }) => ({
-            tasks:          [task, ...tasks],
+            tasks: sortTasksByGroup(
+                [newTask, ...tasks].filter((task) => task.message.includes(
+                    this.state.tasksFilter)
+                )),
             newTaskMessage: '',
         }));
 
         this._setTasksFetchingState(false);
+
+        // this._fetchTasksAsync();
     };
 
     _updateTaskAsync = async (params) => {
@@ -67,7 +76,7 @@ export default class Scheduler extends Component {
 
         const updatedTask = await api.updateTask(params);
 
-        console.log("updatedTask from Sheduler:", updatedTask);
+        // console.log("updatedTask from Sheduler:", updatedTask);
 
         this.setState(({ tasks }) => ({
             tasks: tasks.map(
@@ -90,10 +99,13 @@ export default class Scheduler extends Component {
         }));
 
         this._setTasksFetchingState(false);
-
     };
 
     _updateTasksFilter = (event) => {
+        if (!event.target.value) {
+            this._fetchTasksAsync();
+        }
+
         this.setState({
             tasksFilter: event.target.value,
         });
@@ -110,7 +122,7 @@ export default class Scheduler extends Component {
         const isAllTasksCompleted = this.state.tasks.every((task) => task.completed);
 
         if (isAllTasksCompleted) {
-            console.log("All Tasks Completed:", isAllTasksCompleted);
+            // console.log("All Tasks Completed:", isAllTasksCompleted);
 
             return null;
         }
@@ -119,7 +131,7 @@ export default class Scheduler extends Component {
 
         const notCompletedTasks = this.state.tasks.filter((task) => !task.completed);
 
-        console.log("Not Completed Tasks:", notCompletedTasks);
+        // console.log("Not Completed Tasks:", notCompletedTasks);
 
         await api.completeAllTasks(notCompletedTasks);
 
@@ -133,7 +145,7 @@ export default class Scheduler extends Component {
                 }),
         }));
 
-        console.log("TASKS:", this.state.tasks);
+        // console.log("TASKS:", this.state.tasks);
 
         this._setTasksFetchingState(false);
     };
@@ -155,13 +167,28 @@ export default class Scheduler extends Component {
 
         const tasksJSX = tasks.map((task) => {
             return (
-                <Task
+                <CSSTransition
+                    appear
+                    classNames = { {
+                        appear:       Styles.taskAppear,
+                        appearActive: Styles.taskAppearActive,
+                        enter:        Styles.taskInStart,
+                        enterActive:  Styles.taskInEnd,
+                        exit:         Styles.postOutStart,
+                        exitActive:   Styles.postOutEnd,
+                    } }
                     key = { task.id }
-                    { ...task }
-                    _removeTaskAsync = { this._removeTaskAsync }
-                    _updateTaskAsync = { this._updateTaskAsync }
-                    modified = { modified }
-                />
+                    timeout = { {
+                        enter: 400,
+                        exit:  400,
+                    } }>
+                    <Task
+                        { ...task }
+                        _removeTaskAsync = { this._removeTaskAsync }
+                        _updateTaskAsync = { this._updateTaskAsync }
+                        modified = { modified }
+                    />
+                </CSSTransition>
             );
         });
 
@@ -178,6 +205,7 @@ export default class Scheduler extends Component {
                             type = 'search'
                             value = { tasksFilter.toLowerCase() }
                             onChange = { this._updateTasksFilter }
+                            onKeyDown = { this._fetchTasksAsync }
                         />
                     </header>
 
@@ -196,9 +224,11 @@ export default class Scheduler extends Component {
                             </button>
                         </form>
 
-                        <div className = 'overlay'>
+                        <div>
                             <ul>
-                                {tasksJSX}
+                                <TransitionGroup>
+                                    {tasksJSX}
+                                </TransitionGroup>
                             </ul>
                         </div>
                     </section>

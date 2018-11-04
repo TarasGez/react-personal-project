@@ -190,4 +190,34 @@
             }
         }
     }
+    
+    & .taskAppear {
+        transform: scale(5);
+    }  
+    
+    & .taskAppearActive{
+        opacity: 0;
+    }
+
+    & .taskInStart {
+        transform: scale(.5);
+        opacity: .1;
+    }
+
+    & .taskInEnd {
+        transform: scale(1);
+        transition: opacity 400ms cubic-bezier(.55, .085, .68, .53), transform 400ms cubic-bezier(.55, .085, .68, .53);
+        opacity: 1;
+    }
+
+    & .postOutStart {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    & .postOutEnd {
+        transform: scale(.5);
+        transition: opacity 400ms cubic-bezier(.55, .085, .68, .53), transform 400ms cubic-bezier(.55, .085, .68, .53);
+        opacity: .01;
+    }
 }
