@@ -1,6 +1,7 @@
 // Core
 import React, { Component } from 'react';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
+import FlipMove from 'react-flip-move';
 
 // Components
 import Spinner from 'components/Spinner';
@@ -182,6 +183,7 @@ export default class Scheduler extends Component {
                         enter: 400,
                         exit:  400,
                     } }>
+
                     <Task
                         { ...task }
                         _removeTaskAsync = { this._removeTaskAsync }
@@ -227,7 +229,9 @@ export default class Scheduler extends Component {
                         <div>
                             <ul>
                                 <TransitionGroup>
-                                    {tasksJSX}
+                                    <FlipMove>
+                                        {tasksJSX}
+                                    </FlipMove>
                                 </TransitionGroup>
                             </ul>
                         </div>
