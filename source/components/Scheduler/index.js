@@ -38,7 +38,7 @@ export default class Scheduler extends Component {
 
         this.setState({
             tasks: sortTasksByGroup(
-                tasks.filter((task) => task.message.includes(
+                tasks.filter((task) => task.message.toLowerCase().includes(
                     this.state.tasksFilter)
                 )),
         });
@@ -61,7 +61,7 @@ export default class Scheduler extends Component {
 
         this.setState(({ tasks }) => ({
             tasks: sortTasksByGroup(
-                [newTask, ...tasks].filter((task) => task.message.includes(
+                [newTask, ...tasks].filter((task) => task.message.toLowerCase().includes(
                     this.state.tasksFilter)
                 )),
             newTaskMessage: '',
@@ -103,12 +103,11 @@ export default class Scheduler extends Component {
     };
 
     _updateTasksFilter = (event) => {
-        if (!event.target.value) {
-            this._fetchTasksAsync();
-        }
+
+        this._fetchTasksAsync();
 
         this.setState({
-            tasksFilter: event.target.value,
+            tasksFilter: event.target.value.toLowerCase(),
         });
     }
 
@@ -205,9 +204,8 @@ export default class Scheduler extends Component {
                         <input
                             placeholder = 'Поиск'
                             type = 'search'
-                            value = { tasksFilter.toLowerCase() }
+                            value = { tasksFilter }
                             onChange = { this._updateTasksFilter }
-                            onKeyDown = { this._fetchTasksAsync }
                         />
                     </header>
 
@@ -226,22 +224,20 @@ export default class Scheduler extends Component {
                             </button>
                         </form>
 
-                        <div>
-                            <ul>
-                                <TransitionGroup>
-                                    <FlipMove>
-                                        {tasksJSX}
-                                    </FlipMove>
-                                </TransitionGroup>
-                            </ul>
-                        </div>
+                        <ul>
+                            <TransitionGroup>
+                                <FlipMove>
+                                    {tasksJSX}
+                                </FlipMove>
+                            </TransitionGroup>
+                        </ul>
+
                     </section>
                     <footer>
                         <Checkbox
                             checked = { getAllCompleted }
                             color1 = '#363636'
                             color2 = '#fff'
-                            hover = { false }
                             onClick = { this._completeAllTasksAsync }
                         />
                         <span className = { Styles.completeAllTasks }>
