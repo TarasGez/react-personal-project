@@ -1,6 +1,6 @@
 // Core
 import React, { Component } from 'react';
-import { CSSTransition, TransitionGroup } from 'react-transition-group';
+// import { CSSTransition, TransitionGroup } from 'react-transition-group';
 import FlipMove from 'react-flip-move';
 
 // Components
@@ -37,10 +37,7 @@ export default class Scheduler extends Component {
         const tasks = await api.fetchTasks();
 
         this.setState({
-            tasks: sortTasksByGroup(
-                tasks.filter((task) => task.message.toLowerCase().includes(
-                    this.state.tasksFilter)
-                )),
+            tasks,
         });
 
         this._setTasksFetchingState(false);
@@ -57,37 +54,50 @@ export default class Scheduler extends Component {
 
         this._setTasksFetchingState(true);
 
-        const newTask = await api.createTask(newTaskMessage);
+        const task = await api.createTask(newTaskMessage);
+
+        console.log("NEW TASK ++++++++++", task);
 
         this.setState(({ tasks }) => ({
-            tasks: sortTasksByGroup(
-                [newTask, ...tasks].filter((task) => task.message.toLowerCase().includes(
-                    this.state.tasksFilter)
-                )),
+            tasks:          [task, ...tasks],
             newTaskMessage: '',
         }));
 
         this._setTasksFetchingState(false);
-
-        // this._fetchTasksAsync();
     };
 
     _updateTaskAsync = async (params) => {
         this._setTasksFetchingState(true);
 
-        const updatedTask = await api.updateTask(params);
+        console.log("PARAMS Sheduler:", params);
 
-        // console.log("updatedTask from Sheduler:", updatedTask);
+        console.log("PARAMS.ID Sheduler:", params.id);
+
+        const updatedTasks = await api.updateTask(params);
+
+        console.log("updatedTask IN Sheduler:", updatedTasks);
+
+        console.log("TASKS MAP >>>>>>>>>> :", this.state.tasks.map((task) => task));
+
+        console.log("updatedTasks MAP >>>>>>>>>> :", updatedTasks.map((upTask) => upTask));
+
+        console.log("updatedTasks.id        >>>>>>>>>> :", updatedTasks[0].id);
+
+        console.log("!!!!!!!!!!!!!!!!>>>>>>>>>> :", this.state.tasks.map(
+            (task) => updatedTasks.map(
+                (upTask) => task.id === String(upTask.id) ? upTask[0] : task,
+            )
+        ));
 
         this.setState(({ tasks }) => ({
             tasks: tasks.map(
-                (task) => task.id === updatedTask.id ? updatedTask : task,
+                (task) => task.id === updatedTasks[0].id ? updatedTasks[0] : task,
             ),
         }));
 
-        this._setTasksFetchingState(false);
+        console.log("this.state.tasks from Sheduler2:", this.state.tasks);
 
-        this._fetchTasksAsync();
+        this._setTasksFetchingState(false);
     };
 
     _removeTaskAsync = async (id) => {
@@ -103,9 +113,6 @@ export default class Scheduler extends Component {
     };
 
     _updateTasksFilter = (event) => {
-
-        this._fetchTasksAsync();
-
         this.setState({
             tasksFilter: event.target.value.toLowerCase(),
         });
@@ -122,7 +129,6 @@ export default class Scheduler extends Component {
         const isAllTasksCompleted = this.state.tasks.every((task) => task.completed);
 
         if (isAllTasksCompleted) {
-            // console.log("All Tasks Completed:", isAllTasksCompleted);
 
             return null;
         }
@@ -130,8 +136,6 @@ export default class Scheduler extends Component {
         this._setTasksFetchingState(true);
 
         const notCompletedTasks = this.state.tasks.filter((task) => !task.completed);
-
-        // console.log("Not Completed Tasks:", notCompletedTasks);
 
         await api.completeAllTasks(notCompletedTasks);
 
@@ -144,8 +148,6 @@ export default class Scheduler extends Component {
                     };
                 }),
         }));
-
-        // console.log("TASKS:", this.state.tasks);
 
         this._setTasksFetchingState(false);
     };
@@ -165,31 +167,34 @@ export default class Scheduler extends Component {
         const modified = '';
         const getAllCompleted = this._getAllCompleted();
 
-        const tasksJSX = tasks.map((task) => {
+        const tasksJSX = sortTasksByGroup(tasks).filter(
+            (task) => task.message.toLowerCase().includes(tasksFilter)
+        ).map((task) => {
             return (
-                <CSSTransition
-                    appear
-                    classNames = { {
-                        appear:       Styles.taskAppear,
-                        appearActive: Styles.taskAppearActive,
-                        enter:        Styles.taskInStart,
-                        enterActive:  Styles.taskInEnd,
-                        exit:         Styles.postOutStart,
-                        exitActive:   Styles.postOutEnd,
-                    } }
-                    key = { task.id }
-                    timeout = { {
-                        enter: 400,
-                        exit:  400,
-                    } }>
+                // <CSSTransition
+                //     appear
+                //     classNames = { {
+                //         appear:       Styles.taskAppear,
+                //         appearActive: Styles.taskAppearActive,
+                //         enter:        Styles.taskInStart,
+                //         enterActive:  Styles.taskInEnd,
+                //         exit:         Styles.postOutStart,
+                //         exitActive:   Styles.postOutEnd,
+                //     } }
+                //     key = { task.id }
+                //     timeout = { {
+                //         enter: 400,
+                //         exit:  400,
+                //     } }>
 
-                    <Task
-                        { ...task }
-                        _removeTaskAsync = { this._removeTaskAsync }
-                        _updateTaskAsync = { this._updateTaskAsync }
-                        modified = { modified }
-                    />
-                </CSSTransition>
+                <Task
+                    { ...task }
+                    _removeTaskAsync = { this._removeTaskAsync }
+                    _updateTaskAsync = { this._updateTaskAsync }
+                    key = { task.id }
+                    modified = { modified }
+                />
+                // </CSSTransition>
             );
         });
 
@@ -225,11 +230,11 @@ export default class Scheduler extends Component {
                         </form>
 
                         <ul>
-                            <TransitionGroup>
-                                <FlipMove>
-                                    {tasksJSX}
-                                </FlipMove>
-                            </TransitionGroup>
+                            {/* <TransitionGroup> */}
+                            <FlipMove>
+                                {tasksJSX}
+                            </FlipMove>
+                            {/* </TransitionGroup> */}
                         </ul>
 
                     </section>

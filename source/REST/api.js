@@ -31,7 +31,7 @@ export const api = {
     },
 
     async updateTask (params) {
-        // console.log("UdateTASK params in API:", params);
+        console.log("UdateTASK params in API:", params);
 
         const response = await fetch(MAIN_URL, {
             method:  'PUT',
@@ -42,11 +42,15 @@ export const api = {
             body: JSON.stringify([{ ...params }]),
         });
 
-        const { data: task } = await response.json();
+        const { data: updatedTasks } = await response.json();
 
-        // console.log("updateTask in API:", task);
+        console.log("UdateTASKSin API:", updatedTasks);
 
-        return task;
+        const newTasksList = updatedTasks.map((task) => task);
+
+        console.log("newTasksList API:", newTasksList);
+
+        return newTasksList;
     },
 
     async removeTask (id) {
@@ -61,7 +65,6 @@ export const api = {
     async completeAllTasks (notCompletedTasks) {
         await Promise.all(
             [notCompletedTasks.forEach((item) => {
-                // console.log("notCompletedTask send:", item);
                 api.updateTask({
                     ...item,
                     completed: true,
