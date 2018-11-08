@@ -31,8 +31,6 @@ export const api = {
     },
 
     async updateTask (params) {
-        console.log("UdateTASK params in API:", params);
-
         const response = await fetch(MAIN_URL, {
             method:  'PUT',
             headers: {
@@ -44,11 +42,7 @@ export const api = {
 
         const { data: updatedTasks } = await response.json();
 
-        console.log("UdateTASKSin API:", updatedTasks);
-
         const newTasksList = updatedTasks.map((task) => task);
-
-        console.log("newTasksList API:", newTasksList);
 
         return newTasksList;
     },

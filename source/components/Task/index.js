@@ -70,8 +70,6 @@ export default class Task extends PureComponent {
         }
 
         _updateTaskAsync(this._getTaskShape({ message: newMessage }));
-
-        console.log("this._getTaskShape({ message: newMessage }):", this._getTaskShape({ message: newMessage }));
         this._setTaskEditingState(false);
     };
 
@@ -129,7 +127,6 @@ export default class Task extends PureComponent {
         const { _updateTaskAsync, favorite } = this.props;
 
         _updateTaskAsync(this._getTaskShape({ favorite: !favorite }));
-
     };
 
     _removeTask = () => {
