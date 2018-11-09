@@ -141,8 +141,6 @@ export default class Scheduler extends Component {
             tasks,
         } = this.state;
 
-        const modified = '';
-
         const tasksJSX = sortTasksByGroup(tasks).filter(
             (task) => task.message.toLowerCase().includes(tasksFilter)
         ).map((task) => {
@@ -152,7 +150,6 @@ export default class Scheduler extends Component {
                     _removeTaskAsync = { this._removeTaskAsync }
                     _updateTaskAsync = { this._updateTaskAsync }
                     key = { task.id }
-                    modified = { modified }
                 />
             );
         });
